@@ -1,11 +1,11 @@
 // Adds or removes a shortcut in the Windows Startup folder so the app starts when you log in.
-//   node scripts/startup.js install    add the shortcut and start the app now
+//   node scripts/startup.js install    add the shortcut and (re)start the app now
 //   node scripts/startup.js uninstall  remove the shortcut and stop the app
 //   node scripts/startup.js stop       stop the running app
 const fs = require("fs");
 const path = require("path");
 const { execFileSync, spawn } = require("child_process");
-const { stopRunning } = require("../src/instance");
+const { stopRunning, stopAndWait } = require("../src/instance");
 
 const ROOT = path.join(__dirname, "..");
 const STARTUP_DIR = path.join(process.env.APPDATA, "Microsoft", "Windows", "Start Menu", "Programs", "Startup");
@@ -45,12 +45,15 @@ function startInBackground() {
 
 async function main() {
     switch (process.argv[2]) {
-        case "install":
-            createShortcut();
+        case "install": {
+            createShortcut(); // overwrites the existing shortcut, so running this again is safe
             console.log(`✓ Added to startup: ${SHORTCUT}`);
+            // Restart any running copy so it picks up code or config changes.
+            const restarted = await stopAndWait();
             startInBackground();
-            console.log("✓ Started in the background. Messages go to logs/presence.log.");
+            console.log(`✓ ${restarted ? "Restarted" : "Started"} in the background. Messages go to logs/presence.log.`);
             break;
+        }
         case "uninstall":
             if (fs.existsSync(SHORTCUT)) {
                 fs.unlinkSync(SHORTCUT);

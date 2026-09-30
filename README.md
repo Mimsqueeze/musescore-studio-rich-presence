@@ -45,7 +45,7 @@ This adds a shortcut to your Windows Startup folder and starts the app right awa
 
 Only one copy runs at a time. If it's already running in the background, `npm start` tells you so and exits.
 
-If you move this folder or reinstall Node.js, run `npm run install-startup` again to update the shortcut.
+Running `npm run install-startup` again is safe. It replaces the shortcut and restarts the background copy, so use it after changing `config.json`, updating the code, moving this folder, or reinstalling Node.js.
 
 ## How it works
 

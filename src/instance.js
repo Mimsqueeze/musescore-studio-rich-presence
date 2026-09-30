@@ -34,4 +34,25 @@ function stopRunning() {
     });
 }
 
-module.exports = { acquireLock, stopRunning };
+/** Resolves true if a copy is currently running. */
+function isRunning() {
+    return new Promise((resolve) => {
+        const socket = net.connect(PIPE, () => {
+            socket.destroy();
+            resolve(true);
+        });
+        socket.on("error", () => resolve(false));
+    });
+}
+
+/** Asks a running copy to stop and waits (up to `timeoutMs`) until it has exited. */
+async function stopAndWait(timeoutMs = 10_000) {
+    if (!(await stopRunning())) return false;
+    const deadline = Date.now() + timeoutMs;
+    while ((await isRunning()) && Date.now() < deadline) {
+        await new Promise((r) => setTimeout(r, 200));
+    }
+    return true;
+}
+
+module.exports = { acquireLock, stopRunning, stopAndWait };
