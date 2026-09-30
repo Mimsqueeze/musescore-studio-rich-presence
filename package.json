@@ -1,0 +1,33 @@
+{
+  "name": "musescore-studio-rich-presence",
+  "version": "1.0.0",
+  "description": "Shows the score you're working on in MuseScore Studio as your Discord Rich Presence",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "stop": "node scripts/startup.js stop",
+    "install-startup": "node scripts/startup.js install",
+    "uninstall-startup": "node scripts/startup.js uninstall"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Mimsqueeze/musescore-studio-rich-presence.git"
+  },
+  "keywords": [
+    "musescore",
+    "musescore-studio",
+    "discord",
+    "rich-presence"
+  ],
+  "type": "commonjs",
+  "engines": {
+    "node": ">=18"
+  },
+  "bugs": {
+    "url": "https://github.com/Mimsqueeze/musescore-studio-rich-presence/issues"
+  },
+  "homepage": "https://github.com/Mimsqueeze/musescore-studio-rich-presence#readme",
+  "dependencies": {
+    "@xhayper/discord-rpc": "^1.5.1"
+  }
+}
