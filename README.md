@@ -1,0 +1,1 @@
+# musescore-studio-rich-presence
