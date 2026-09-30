@@ -14,7 +14,7 @@ const BACKGROUND = process.argv.includes("--background");
 let client = null;
 let ready = false;
 let lastActivityJson = null;
-let lastLoggedDetails = null;
+let lastLoggedTitle = null;
 let shownPid = null; // MuseScore process currently shown on Discord
 let focusedPid = null; // MuseScore process whose window was most recently in the foreground
 const startTimes = new Map(); // score key -> when we first saw it open, so switching windows keeps elapsed time
@@ -46,22 +46,23 @@ function describeInstruments(instruments) {
     return `${instruments.length} instruments: ${names.slice(0, 3).join(", ")}, …`;
 }
 
-function buildStates(info) {
-    if (!info) return [];
+/** The second-line texts chosen in `config.states`, skipping any this score doesn't have. */
+function buildStates(info, open) {
     const builders = {
-        composer: () => info.composer && `by ${info.composer}`,
-        subtitle: () => info.subtitle,
-        instruments: () => describeInstruments(info.instruments),
+        subtitle: () => info?.subtitle,
+        part: () => open.partName && `${open.partName} part`,
+        composer: () => info?.composer && `by ${info.composer}`,
+        instruments: () => info && describeInstruments(info.instruments),
         measures: () =>
-            info.measures > 0 &&
+            info?.measures > 0 &&
             [`${info.measures} measure${info.measures === 1 ? "" : "s"}`, info.timeSignature].filter(Boolean).join(" · "),
-        key: () => info.key && `Key: ${info.key}`,
-        tempo: () => info.bpm && `♩ = ${info.bpm}`,
+        key: () => info?.key && `Key: ${info.key}`,
+        tempo: () => info?.bpm && `♩ = ${info.bpm}`,
     };
     return config.states.map((s) => builders[s]?.()).filter(Boolean);
 }
 
-const isMuseScore = (name) =>
+const isMuseScore =(name) =>
     config.processNames.some((p) => p.replace(/\.exe$/i, "").toLowerCase() === name.toLowerCase());
 
 /**
@@ -100,6 +101,7 @@ async function buildActivity() {
 
     const startTimestamp = startTimeFor(win.key, new Set(windows.map((w) => w.key)));
     const base = {
+        name: config.activityName || undefined,
         largeImageKey: config.largeImage,
         largeImageText: config.largeImageText,
         startTimestamp,
@@ -111,14 +113,12 @@ async function buildActivity() {
     if (config.privateMode) return { ...base, details: "Composing" };
 
     const info = open.filePath ? getScoreInfo(open.filePath) : null;
-    const name = info?.title || open.scoreName;
-    const states = buildStates(info);
-    if (open.partName) states.unshift(`Viewing ${open.partName} part`);
-
+    const states = buildStates(info, open);
+    // With more than one state, the second line rotates through them.
     const rotation = Math.floor(Date.now() / (config.rotateInterval * 1000));
     return {
         ...base,
-        details: fit(`Editing ${name}`),
+        details: fit(info?.title || open.scoreName),
         state: fit(states.length ? states[rotation % states.length] : undefined),
     };
 }
@@ -140,11 +140,13 @@ async function update() {
         if (json !== lastActivityJson) {
             if (activity) {
                 await client.user.setActivity(activity);
-                // Only log when the score changes, not on every rotation of the second line.
-                if (activity.details !== lastLoggedDetails) console.log(`♪ ${activity.details}`);
-                lastLoggedDetails = activity.details;
+                // Log score changes, not every rotation of the second line.
+                if (activity.details !== lastLoggedTitle) {
+                    console.log(`♪ ${activity.details}${activity.state ? ` — ${activity.state}` : ""}`);
+                }
+                lastLoggedTitle = activity.details;
             } else {
-                lastLoggedDetails = null;
+                lastLoggedTitle = null;
                 await client.user.clearActivity();
                 console.log("· MuseScore isn't running; presence cleared.");
             }

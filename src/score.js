@@ -132,14 +132,11 @@ function parseScoreXml(xml) {
         title: clean(titleFrame.title) || clean(metaTags.workTitle),
         subtitle: clean(frameLines("subtitle")[0]) || clean(titleFrame.subtitle) || clean(metaTags.subtitle),
         composer: clean(joinLines(composerLines)) || clean(metaTags.composer),
-        arranger: clean(metaTags.arranger),
-        lyricist: clean(joinLines(frameLines("lyricist"))) || clean(metaTags.lyricist),
         instruments,
         measures,
         timeSignature: sigN && sigD ? `${sigN[1]}/${sigD[1]}` : null,
         key: concertKey ? keyName(Number(concertKey[1]), mode) : null,
         bpm: bpm ? Math.round(Number(bpm[1])) : null,
-        programVersion: xml.match(/<programVersion>([^<]+)<\/programVersion>/)?.[1] || null,
     };
 }
 

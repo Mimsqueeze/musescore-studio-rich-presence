@@ -4,20 +4,23 @@ const path = require("path");
 const os = require("os");
 
 const DEFAULTS = {
-    // Discord application ID. The name of this application is what shows as "Playing ...".
-    // The default shows as "MuseScore"; create your own at
-    // https://discord.com/developers/applications to show "MuseScore Studio" instead.
+    // Discord application ID. You don't need your own: the name shown is set by `activityName`.
     clientId: "577645453429047314",
+
+    // Shown as "Playing ..." on your profile, in place of the application's own name ("MuseScore").
+    activityName: "MuseScore Studio",
 
     // How often to check MuseScore, in seconds. Discord rate-limits presence updates to about one per 15s,
     // but only changed activities are sent, so polling faster just makes switches feel quicker.
     updateInterval: 5,
 
-    // Seconds between rotating the second line through composer, instruments, measures, etc.
-    rotateInterval: 15,
+    // What the second line (below the title) shows. With one entry it stays fixed; with several it
+    // rotates through them every `rotateInterval` seconds. Entries a score doesn't have are skipped.
+    // Options: "subtitle", "part", "composer", "instruments", "measures", "key", "tempo".
+    states: ["subtitle"],
 
-    // Which details to rotate through on the second line. Remove any you don't want to share.
-    states: ["composer", "subtitle", "instruments", "measures", "key", "tempo"],
+    // Seconds between rotations of the second line.
+    rotateInterval: 15,
 
     // Hide the score name entirely (shows "Composing" instead).
     privateMode: false,

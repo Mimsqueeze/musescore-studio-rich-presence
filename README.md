@@ -3,13 +3,13 @@
 Show the score you're working on in [MuseScore Studio](https://musescore.org) as your Discord Rich Presence.
 
 ```
-Playing MuseScore
-Editing Moonlight Sonata
-by Ludwig van Beethoven                        ← rotates every 15s
+Playing MuseScore Studio
+Piano Sonata No. 14
+Moonlight Sonata
 00:42 elapsed
 ```
 
-The second line rotates through the composer, subtitle, instruments, measure count and time signature, key signature, and tempo.
+The first line is the score's title, and by default the second is its subtitle. The second line can instead rotate through other details, such as the composer, instruments or tempo. See [Configuration](#configuration).
 
 It runs alongside MuseScore Studio, with nothing to install inside MuseScore and no admin rights needed.
 
@@ -53,9 +53,9 @@ Everything is read from outside MuseScore:
 
 1. **Which score is open.** MuseScore Studio sets its window title to the open score's name (`Score`, `Score - Part` in a part tab, or `MuseScore Studio` on the Home screen). The title is read with `tasklist`, which works even when MuseScore runs elevated. A small PowerShell helper ([src/foreground.ps1](src/foreground.ps1)) watches which window is in front, so the status can follow the MuseScore window you're using.
 2. **Where that score lives.** The title is matched against MuseScore's own `session/session.json` and `recent_files.json` in `%LOCALAPPDATA%\MuseScore\MuseScore4`. This resolves the full path wherever your Documents folder is, including OneDrive, and also covers cloud scores.
-3. **Score details.** The `.mscz` file is a zip archive. The score XML inside it is read to get the title, subtitle and composer from the title frame, plus the instruments, measures, time and key signatures, and tempo. Results are cached and refreshed whenever you save.
+3. **Score details.** The `.mscz` file is a zip archive. The score XML inside it is read to get the title, subtitle and composer from the title frame at the top of the score, plus the instruments, measures, time and key signatures, and tempo. If the title frame has several lines, the one in the largest font is used as the title. Results are cached and refreshed whenever you save.
 
-Because the details come from the saved file, changes show up in your status after you save. The score name updates right away.
+Because the details come from the saved file, edits show up in your status after you save. Switching scores updates it right away.
 
 ## Configuration
 
@@ -63,30 +63,38 @@ Create a `config.json` in the project root to override any default from [src/con
 
 ```json
 {
-  "clientId": "YOUR_DISCORD_APPLICATION_ID",
-  "states": ["composer", "instruments", "measures"],
-  "privateMode": false
+  "states": ["subtitle", "composer", "instruments"],
+  "rotateInterval": 20
 }
 ```
 
+### The second line
+
+`states` chooses what appears below the title. With one entry, that entry stays fixed. With several, the line rotates through them every `rotateInterval` seconds. Entries a score doesn't have, like a missing subtitle, are skipped. If none apply, the second line is left out.
+
+| Entry | Example |
+| --- | --- |
+| `subtitle` | Moonlight Sonata |
+| `part` | Violin 1 part (only while a part tab is open) |
+| `composer` | by Ludwig van Beethoven |
+| `instruments` | Piano |
+| `measures` | 184 measures · 4/4 |
+| `key` | Key: E major / C♯ minor |
+| `tempo` | ♩ = 54 |
+
+### All options
+
 | Option | Default | Description |
 | --- | --- | --- |
-| `clientId` | a "MuseScore" app | Discord application ID. Its name is what appears after "Playing". |
-| `states` | `["composer", "subtitle", "instruments", "measures", "key", "tempo"]` | Details to rotate through on the second line. |
-| `rotateInterval` | `15` | Seconds between rotations. |
+| `activityName` | `"MuseScore Studio"` | The name shown after "Playing". |
+| `clientId` | a shared "MuseScore" app | Discord application ID. You only need your own if you want to upload custom images to it. |
+| `states` | `["subtitle"]` | What the second line shows. See above. |
+| `rotateInterval` | `15` | Seconds between rotations of the second line. |
 | `updateInterval` | `5` | Seconds between checks of MuseScore. |
-| `privateMode` | `false` | Show "Composing" instead of the score name. |
+| `privateMode` | `false` | Show "Composing" instead of any score details. |
 | `largeImage` / `largeImageText` | MuseScore Studio icon | Image URL (or asset key) and its hover text. |
 | `processNames` | `MuseScore4.exe`, … | Executables to look for. |
 | `dataDir` | `%LOCALAPPDATA%\MuseScore\MuseScore4` | Where MuseScore keeps its session and recent-files lists. |
-
-### Showing "Playing MuseScore Studio"
-
-The default application ID shows as **Playing MuseScore**. To use your own name:
-
-1. Go to the [Discord Developer Portal](https://discord.com/developers/applications) and click **New Application**.
-2. Name it `MuseScore Studio`.
-3. Copy its **Application ID** into `config.json` as `clientId`.
 
 ## Limitations
 
